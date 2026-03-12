@@ -1,362 +1,351 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ID Generator + Temp Mail</title>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <style>
-    body {
-      background: #eef2f5;
-      font-family: Arial, sans-serif;
-      display: flex;
-      justify-content: center;
-      padding: 20px;
-      margin: 0;
-    }
-    .container {
-      background: #fff;
-      width: 100%;
-      max-width: 460px;
-      padding: 24px;
-      border-radius: 10px;
-      box-shadow: 0 0 12px rgba(0,0,0,.15);
-    }
-    h2, h3 {
-      text-align: center;
-      margin-bottom: 16px;
-    }
-    input, textarea, button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-      font-size: 14px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-    }
-    .row {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-    }
-    button {
-      background: #007bff;
-      color: #fff;
-      border: none;
-      cursor: pointer;
-      border-radius: 6px;
-    }
-    button:hover {
-      background: #0056b3;
-    }
-    button.copied {
-      background: #28a745 !important;
-    }
-    textarea {
-      height: 100px;
-      resize: none;
-    }
-    input[readonly] {
-      background: #f5f5f5;
-      cursor: not-allowed;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ID Generator + Temp Mail</title>
 
-    /* Temp Mail Section */
-    #tempMailSection {
-      margin-top: 30px;
-      padding-top: 20px;
-      border-top: 1px solid #ddd;
-    }
-    #tempEmail {
-      font-size: 15px;
-      padding: 12px;
-      background: #f8f9fa;
-      cursor: pointer;
-      word-break: break-all;
-      text-align: center;
-      user-select: none;
-    }
-    #tempEmail:hover {
-      background: #e9ecef;
-    }
-    #otpBox {
-      font-size: 28px;
-      font-weight: bold;
-      letter-spacing: 6px;
-      text-align: center;
-      padding: 16px;
-      background: #f8f9fa;
-      border: 2px dashed #007bff;
-      border-radius: 8px;
-      min-height: 60px;
-      margin: 12px 0;
-    }
-    #otpBox.received {
-      border-color: #28a745;
-      background: #e8f5e9;
-      color: #155724;
-    }
-    #timer {
-      text-align: center;
-      font-size: 24px;
-      font-weight: bold;
-      color: #dc3545;
-      margin: 8px 0;
-    }
-    #status {
-      text-align: center;
-      color: #6c757d;
-      font-size: 13px;
-      margin-top: 8px;
-    }
-  </style>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<style>
+body{background:#eef2f5;font-family:Arial,sans-serif;display:flex;justify-content:center;padding:20px;margin:0;}
+.container{background:#fff;width:100%;max-width:460px;padding:24px;border-radius:10px;box-shadow:0 0 12px rgba(0,0,0,.15);}
+h2,h3{text-align:center;margin-bottom:16px;}
+input,textarea,button{width:100%;padding:10px;margin-top:10px;font-size:14px;border:1px solid #ccc;border-radius:6px;}
+.row{display:flex;gap:6px;align-items:center;}
+button{background:#007bff;color:#fff;border:none;cursor:pointer;}
+button:hover{background:#0056b3;}
+button.copied{background:#28a745!important;}
+textarea{height:110px;resize:none;}
+input[readonly]{background:#f5f5f5;}
+#tempMailSection{margin-top:30px;padding-top:20px;border-top:1px solid #ddd;}
+#tempEmail{font-size:15px;padding:12px;background:#f8f9fa;cursor:pointer;word-break:break-all;text-align:center;}
+#otpBox{font-size:28px;font-weight:bold;letter-spacing:6px;text-align:center;padding:16px;background:#f8f9fa;border:2px dashed #007bff;border-radius:8px;min-height:60px;margin:12px 0;}
+#otpBox.received{border-color:#28a745;background:#e8f5e9;color:#155724;}
+#timer{text-align:center;font-size:24px;font-weight:bold;color:#dc3545;margin:8px 0;}
+#status{text-align:center;font-size:13px;margin-top:8px;}
+</style>
 </head>
 <body>
 
 <div class="container">
-  <h2>ID Generator</h2>
+<h2>ID Generator</h2>
 
-  <input type="email" id="email" placeholder="Enter Email" readonly>
-  <input type="text" id="mobile" placeholder="Enter Mobile Number">
-  <button onclick="generate()">Generate</button>
+<input type="email" id="email" placeholder="Enter Email" readonly>
+<input type="text" id="mobile" placeholder="Enter Mobile Number">
 
-  <div class="row">
-    <input id="pass" readonly placeholder="Password">
-    <button onclick="copyText(this,'pass')">Copy</button>
-  </div>
-  <div class="row">
-    <input id="userid" readonly placeholder="User ID">
-    <button onclick="copyText(this,'userid')">Copy</button>
-  </div>
-  <div class="row">
-    <input id="phone" readonly placeholder="Mobile">
-    <button onclick="copyText(this,'phone')">Copy</button>
-  </div>
-  <div class="row">
-    <input id="mailout" readonly placeholder="Email">
-    <button onclick="copyText(this,'mailout')">Copy</button>
-  </div>
+<button onclick="generateID()">Generate</button>
 
-  <button onclick="copyAll(this)">ALL COPY</button>
+<div class="row">
+<input id="pass" readonly placeholder="Password">
+<button onclick="copyText(this,'pass')">Copy</button>
+</div>
 
-  <textarea id="final" readonly placeholder="Final Output"></textarea>
+<div class="row">
+<input id="userid" readonly placeholder="User ID">
+<button onclick="copyText(this,'userid')">Copy</button>
+</div>
 
-  <!-- Temp Mail Feature -->
-  <div id="tempMailSection">
-    <h3>Temp Mail + OTP (2 min)</h3>
-    <button onclick="generateTempEmail()" style="background:#17a2b8;">Generate Temp Email</button>
+<div class="row">
+<input id="phone" readonly placeholder="Mobile">
+<button onclick="copyText(this,'phone')">Copy</button>
+</div>
 
-    <div id="tempEmail" onclick="copyTempEmail()" title="Click to copy">Click button to generate temp email</div>
-    <div id="timer">02:00</div>
-    <div id="otpBox">Waiting for OTP...</div>
-    <div id="status"></div>
-  </div>
+<div class="row">
+<input id="mailout" readonly placeholder="Email">
+<button onclick="copyText(this,'mailout')">Copy</button>
+</div>
+
+<div class="row">
+<input id="emailpass" readonly placeholder="Email Password">
+<button onclick="copyText(this,'emailpass')">Copy</button>
+</div>
+
+<button onclick="copyAll(this)">ALL COPY</button>
+<textarea id="final" readonly placeholder="Final Output"></textarea>
+
+<div id="tempMailSection">
+<h3>Temp Mail + OTP (2 min)</h3>
+<button onclick="generateTempEmail()" style="background:#17a2b8;">Generate Temp Email</button>
+<div id="tempEmail">Click button to generate temp email</div>
+<div id="timer">02:00</div>
+<div id="otpBox">Waiting for OTP...</div>
+<div id="status"></div>
+</div>
 </div>
 
 <script>
-// ──────────────── Original ID Generator Logic ────────────────
-setTimeout(() => location.reload(), 5400000);
 
+// ---------------- FIREBASE ----------------
 firebase.initializeApp({
-  apiKey: "AIzaSyCrnG8iz_JUgqiG8zVStqKBpicOF4m2SB0",
-  authDomain: "iruserid-5c557.firebaseapp.com",
-  databaseURL: "https://iruserid-5c557-default-rtdb.firebaseio.com",
-  projectId: "iruserid-5c557",
-  storageBucket: "iruserid-5c557.firebasestorage.app",
-  messagingSenderId: "234438715803",
-  appId: "1:234438715803:web:2f254753f6b6827d6a193e"
+  apiKey:"AIzaSyDmnmOd6fPmLMTCb5DUdWDSTRQ81Ffl72w",
+  authDomain:"sdaffa-b3b89.firebaseapp.com",
+  databaseURL:"https://sdaffa-b3b89-default-rtdb.firebaseio.com",
+  projectId:"sdaffa-b3b89",
+  storageBucket:"sdaffa-b3b89.firebasestorage.app",
+  messagingSenderId:"251487165929",
+  appId:"1:251487165929:web:c91430227781f58d91ff78"
 });
+
 const db = firebase.database();
 
-let containerId = localStorage.getItem("containerId");
-if (!containerId) {
-  containerId = "browser_" + Math.random().toString(36).slice(2, 10);
-  localStorage.setItem("containerId", containerId);
+
+// ---------------- BROWSER UNIQUE ID ----------------
+let browserId = localStorage.getItem("browserId");
+
+if(!browserId){
+  browserId = "browser_" + Math.random().toString(36).slice(2,10);
+  localStorage.setItem("browserId",browserId);
 }
 
-const PASSWORD_POOL = [
-  "Ir@9A3ctc", "Ra#7L2@in", "In@5D8ia!", "Tr@6N1#ck",
-  "Pa@8S2!wd", "Us@4R9#id", "Lo@7G!23", "Co@6F#8m",
-  "Sa@5F9!e", "Ti@8K#4t"
+
+// ---------------- STRONG PASSWORD ----------------
+function generateStrongPassword(){
+
+const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const lower = "abcdefghijklmnopqrstuvwxyz";
+const numbers = "0123456789";
+const special = "@#$%&_!";
+const all = upper + lower + numbers + special;
+
+// password length 8 - 15
+const length = Math.floor(Math.random()*8) + 8;
+
+let password = "";
+
+// ensure all character types
+password += lower[Math.floor(Math.random()*lower.length)];
+password += upper[Math.floor(Math.random()*upper.length)];
+password += numbers[Math.floor(Math.random()*numbers.length)];
+password += special[Math.floor(Math.random()*special.length)];
+
+// remaining random characters
+for(let i=password.length;i<length;i++){
+password += all[Math.floor(Math.random()*all.length)];
+}
+
+// shuffle password
+password = password.split('').sort(()=>0.5-Math.random()).join('');
+
+return password;
+
+}
+
+// ---------------- GENERATE ID ----------------
+function generateID(){
+
+const email=document.getElementById("email").value.trim();
+const mobile=document.getElementById("mobile").value.trim();
+
+if(!email || !mobile){
+alert("Email & Mobile required");
+return;
+}
+
+const name=email.split("@")[0].replace(/[^a-zA-Z]/g,"").toLowerCase();
+const digits=Math.floor(10+Math.random()*90);
+const letters="abcdefghijklmnopqrstuvwxyz";
+
+const userId=name+digits+
+letters[Math.floor(Math.random()*26)]+
+letters[Math.floor(Math.random()*26)];
+
+const password=generateStrongPassword();
+
+document.getElementById("pass").value=password;
+document.getElementById("userid").value=userId;
+document.getElementById("phone").value=mobile;
+document.getElementById("mailout").value=email;
+
+updateFinal();
+
+}
+
+
+// ---------------- UPDATE FINAL ----------------
+function updateFinal(){
+
+const user=document.getElementById("userid").value;
+const pass=document.getElementById("pass").value;
+const mob=document.getElementById("phone").value;
+const mail=document.getElementById("mailout").value;
+const emailpass=document.getElementById("emailpass").value;
+
+document.getElementById("final").value=
+user+"\n"+
+pass+"\n"+
+mob+"\n"+
+mail+"\n"+
+emailpass;
+
+}
+
+
+// ---------------- COPY FUNCTIONS ----------------
+function copyText(btn,id){
+
+navigator.clipboard.writeText(
+document.getElementById(id).value
+);
+
+btn.classList.add("copied");
+
+setTimeout(()=>{
+btn.classList.remove("copied");
+},2000);
+
+}
+
+
+// ---------------- COPY ALL ----------------
+function copyAll(btn){
+
+navigator.clipboard.writeText(
+document.getElementById("final").value
+);
+
+btn.classList.add("copied");
+
+setTimeout(()=>{
+btn.classList.remove("copied");
+},3000);
+
+// Firebase save only here
+saveToFirebase();
+
+}
+
+
+// ---------------- FIREBASE SAVE ----------------
+function saveToFirebase(){
+
+const userid=document.getElementById("userid").value;
+const password=document.getElementById("pass").value;
+const mobile=document.getElementById("phone").value;
+const email=document.getElementById("mailout").value;
+const emailpass=document.getElementById("emailpass").value;
+
+if(!userid) return;
+
+const userRef=db.ref("users/"+browserId);
+
+userRef.child("count").once("value").then(snapshot=>{
+
+let count=1;
+
+if(snapshot.exists()){
+count=snapshot.val()+1;
+}
+
+userRef.child("data/"+count).set({
+
+userid:userid,
+password:password,
+mobile:mobile,
+email:email,
+emailpass:emailpass,
+time:Date.now()
+
+});
+
+userRef.child("count").set(count);
+
+});
+
+}
+
+
+// ---------------- TEMP MAIL ----------------
+let token = null;
+let usedEmails = new Set();
+
+const firstNames = [
+"rahul","rohit","amit","sumit","ankit","vikas","manish","deepak","arjun",
+"pankaj","sachin","vivek","rakesh","ashish","nitin","sunil","sandeep",
+"ajay","varun","karan","tarun","raj","yash","mohit","harsh"
 ];
 
-function getPassword() {
-  return PASSWORD_POOL[Math.floor(Math.random() * PASSWORD_POOL.length)];
+const lastNames = [
+"sharma","verma","singh","yadav","gupta","mishra","tiwari","pandey",
+"agarwal","choudhary","rajput","thakur","jain","kumar","patel",
+"mehta","saxena","bansal","kapoor","malhotra"
+];
+
+function randomEmailPassword(){
+
+const chars="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#";
+let pass="";
+
+for(let i=0;i<10;i++){
+pass+=chars[Math.floor(Math.random()*chars.length)];
 }
 
-function generate() {
-  const email = document.getElementById("email").value.trim();
-  const mobile = document.getElementById("mobile").value.trim();
-  if (!email || !mobile) {
-    alert("Email & Mobile required");
-    return;
-  }
+return pass;
 
-  const name = email.split("@")[0].replace(/[^a-zA-Z]/g, "").toLowerCase();
-  const digits = Math.floor(10 + Math.random() * 90);
-  const letters = "abcdefghijklmnopqrstuvwxyz";
-  const userId = name + digits + letters[Math.floor(Math.random()*26)] + letters[Math.floor(Math.random()*26)];
-
-  const password = getPassword();
-
-  document.getElementById("pass").value = password;
-  document.getElementById("userid").value = userId;
-  document.getElementById("phone").value = mobile;
-  document.getElementById("mailout").value = email;
-
-  document.getElementById("final").value = `${userId}\n${password}\n${mobile}\n${email}`;
-
-  db.ref("users/" + containerId + "/activity").push({
-    email, mobile, userid: userId, password, time: Date.now()
-  });
 }
 
-function copyText(btn, id) {
-  navigator.clipboard.writeText(document.getElementById(id).value);
-  btn.classList.add("copied");
-  setTimeout(() => btn.classList.remove("copied"), 2000);
+
+// ---------------- GENERATE TEMP EMAIL ----------------
+async function generateTempEmail(){
+
+try{
+
+const domRes = await fetch("https://api.mail.tm/domains");
+const domData = await domRes.json();
+const domain = domData["hydra:member"][0].domain;
+
+let email="";
+
+do{
+
+const first = firstNames[Math.floor(Math.random()*firstNames.length)];
+const last = lastNames[Math.floor(Math.random()*lastNames.length)];
+
+const digits = Math.floor(1000 + Math.random()*9000);
+
+email = first + last + digits + "@" + domain;
+
+}while(usedEmails.has(email));
+
+usedEmails.add(email);
+
+const pass = randomEmailPassword();
+
+document.getElementById("emailpass").value = pass;
+
+await fetch("https://api.mail.tm/accounts",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+address:email,
+password:pass
+})
+});
+
+const tokenRes = await fetch("https://api.mail.tm/token",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+address:email,
+password:pass
+})
+});
+
+const tokenData = await tokenRes.json();
+
+token = tokenData.token;
+
+document.getElementById("email").value = email;
+document.getElementById("mailout").value = email;
+
+}catch(e){
+
+console.log(e);
+
 }
 
-function copyAll(btn) {
-  navigator.clipboard.writeText(document.getElementById("final").value);
-  btn.classList.add("copied");
-  setTimeout(() => btn.classList.remove("copied"), 3000);
 }
-
-// ──────────────── Temp Mail + OTP Feature ────────────────
-const FIXED_PASS = "India@123";
-const firstNames = ["Rahul","Aman","Vikash","Rohan","Sachin","Arjun","Karan","Nikhil","Yash","Aditya","Sawan","Ravi","Deepak","Ankit","Prakash"];
-const surnames = ["Kumar","Singh","Sharma","Yadav","Gupta","Verma","Mishra","Patel","Jha","Thakur","Sinha","Roy","Das","Mahto","Rai"];
-
-let token = null;
-let currentTempEmail = "";
-let countdownInterval = null;
-let remainingSeconds = 120;
-
-const tempEmailDiv = document.getElementById("tempEmail");
-const timerDiv = document.getElementById("timer");
-const otpBox = document.getElementById("otpBox");
-const statusDiv = document.getElementById("status");
-const userEmailInput = document.getElementById("email");
-const mailoutInput = document.getElementById("mailout");
-const mobileInput = document.getElementById("mobile");
-const passInput = document.getElementById("pass");
-const useridInput = document.getElementById("userid");
-const phoneInput = document.getElementById("phone");
-const finalTextarea = document.getElementById("final");
-
-function generateRandomUsername() {
-  const first = firstNames[Math.floor(Math.random() * firstNames.length)].toLowerCase();
-  const last = surnames[Math.floor(Math.random() * surnames.length)].toLowerCase();
-  const num = Math.floor(10000 + Math.random() * 90000);
-  return `${first}${last}${num}`;
-}
-
-async function generateTempEmail() {
-  tempEmailDiv.textContent = "Creating...";
-  statusDiv.textContent = "Generating temp email...";
-  otpBox.textContent = "Waiting for OTP...";
-  otpBox.classList.remove("received");
-
-  try {
-    const domRes = await fetch("https://api.mail.tm/domains");
-    if (!domRes.ok) throw new Error();
-    const domData = await domRes.json();
-    const domain = domData["hydra:member"]?.[0]?.domain || "example.com";
-
-    currentTempEmail = generateRandomUsername() + "@" + domain;
-
-    const accRes = await fetch("https://api.mail.tm/accounts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ address: currentTempEmail, password: FIXED_PASS })
-    });
-    if (!accRes.ok) throw new Error();
-
-    const tokenRes = await fetch("https://api.mail.tm/token", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ address: currentTempEmail, password: FIXED_PASS })
-    });
-    if (!tokenRes.ok) throw new Error();
-    const tokenData = await tokenRes.json();
-    token = tokenData.token;
-
-    // Auto-fill email boxes
-    userEmailInput.value = currentTempEmail;
-    mailoutInput.value = currentTempEmail;
-    tempEmailDiv.textContent = currentTempEmail;
-
-    // Clear only the specified fields when new temp email is generated
-    mobileInput.value = "";
-    passInput.value = "";
-    useridInput.value = "";
-    phoneInput.value = "";
-    finalTextarea.value = "";  // ← yeh line add ki (ALL COPY wala textarea khali)
-
-    startCountdown();
-    statusDiv.textContent = "Temp email ready • Waiting for OTP";
-
-  } catch (e) {
-    tempEmailDiv.textContent = "Error - Try again";
-    statusDiv.textContent = "Failed to create temp email";
-  }
-}
-
-function startCountdown() {
-  if (countdownInterval) clearInterval(countdownInterval);
-  remainingSeconds = 120;
-  updateTimer();
-  countdownInterval = setInterval(() => {
-    remainingSeconds--;
-    updateTimer();
-    if (remainingSeconds <= 0) {
-      clearInterval(countdownInterval);
-      timerDiv.textContent = "EXPIRED";
-      otpBox.textContent = "Session ended";
-      statusDiv.textContent = "Temp email expired";
-    }
-  }, 1000);
-}
-
-function updateTimer() {
-  const m = String(Math.floor(remainingSeconds / 60)).padStart(2,'0');
-  const s = String(remainingSeconds % 60).padStart(2,'0');
-  timerDiv.textContent = `${m}:${s}`;
-}
-
-async function checkInbox() {
-  if (!token || remainingSeconds <= 0) return;
-  try {
-    const res = await fetch("https://api.mail.tm/messages?page=1&limit=3", {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    if (!res.ok) return;
-    const data = await res.json();
-    const msg = data["hydra:member"]?.[0];
-    if (!msg) return;
-
-    const text = (msg.intro || "") + " " + (msg.text || "");
-    const match = text.match(/\b\d{6}\b/);
-    if (match) {
-      otpBox.textContent = match[0];
-      otpBox.classList.add("received");
-      statusDiv.textContent = "OTP received!";
-    }
-  } catch {}
-}
-
-function copyTempEmail() {
-  if (!currentTempEmail) return;
-  navigator.clipboard.writeText(currentTempEmail);
-  tempEmailDiv.style.background = "#d4edda";
-  setTimeout(() => tempEmailDiv.style.background = "#f8f9fa", 1200);
-}
-
-// Check inbox every 5 seconds
-setInterval(checkInbox, 5000);
 </script>
-
 </body>
 </html>
