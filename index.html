@@ -4,10 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ID Generator + Temp Mail</title>
-
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
 <style>
 body{background:#eef2f5;font-family:Arial,sans-serif;display:flex;justify-content:center;padding:20px;margin:0;}
 .container{background:#fff;width:100%;max-width:460px;padding:24px;border-radius:10px;box-shadow:0 0 12px rgba(0,0,0,.15);}
@@ -28,43 +26,33 @@ input[readonly]{background:#f5f5f5;}
 </style>
 </head>
 <body>
-
 <div class="container">
 <h2>ID Generator</h2>
-
 <input type="email" id="email" placeholder="Enter Email" readonly>
 <input type="text" id="mobile" placeholder="Enter Mobile Number">
-
 <button onclick="generateID()">Generate</button>
-
 <div class="row">
 <input id="pass" readonly placeholder="Password">
 <button onclick="copyText(this,'pass')">Copy</button>
 </div>
-
 <div class="row">
 <input id="userid" readonly placeholder="User ID">
 <button onclick="copyText(this,'userid')">Copy</button>
 </div>
-
 <div class="row">
 <input id="phone" readonly placeholder="Mobile">
 <button onclick="copyText(this,'phone')">Copy</button>
 </div>
-
 <div class="row">
 <input id="mailout" readonly placeholder="Email">
 <button onclick="copyText(this,'mailout')">Copy</button>
 </div>
-
 <div class="row">
 <input id="emailpass" readonly placeholder="Email Password">
 <button onclick="copyText(this,'emailpass')">Copy</button>
 </div>
-
 <button onclick="copyAll(this)">ALL COPY</button>
 <textarea id="final" readonly placeholder="Final Output"></textarea>
-
 <div id="tempMailSection">
 <h3>Temp Mail + OTP (2 min)</h3>
 <button onclick="generateTempEmail()" style="background:#17a2b8;">Generate Temp Email</button>
@@ -76,7 +64,6 @@ input[readonly]{background:#f5f5f5;}
 </div>
 
 <script>
-
 // ---------------- FIREBASE ----------------
 firebase.initializeApp({
   apiKey:"AIzaSyDmnmOd6fPmLMTCb5DUdWDSTRQ81Ffl72w",
@@ -87,363 +74,234 @@ firebase.initializeApp({
   messagingSenderId:"251487165929",
   appId:"1:251487165929:web:c91430227781f58d91ff78"
 });
-
 const db = firebase.database();
-
 
 // ---------------- BROWSER UNIQUE ID ----------------
 let browserId = localStorage.getItem("browserId");
-
 if(!browserId){
-browserId="browser_"+Math.random().toString(36).slice(2,10);
-localStorage.setItem("browserId",browserId);
+  browserId = "browser_" + Math.random().toString(36).slice(2,10);
+  localStorage.setItem("browserId", browserId);
 }
-
 
 // ---------------- STRONG PASSWORD ----------------
 function generateStrongPassword(){
-
-const upper="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-const lower="abcdefghijklmnopqrstuvwxyz";
-const numbers="0123456789";
-const special="@#$%&_!";
-const all=upper+lower+numbers+special;
-
-const length=Math.floor(Math.random()*8)+8;
-
-let password="";
-
-password+=lower[Math.floor(Math.random()*lower.length)];
-password+=upper[Math.floor(Math.random()*upper.length)];
-password+=numbers[Math.floor(Math.random()*numbers.length)];
-password+=special[Math.floor(Math.random()*special.length)];
-
-for(let i=password.length;i<length;i++){
-password+=all[Math.floor(Math.random()*all.length)];
+  const upper   = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const lower   = "abcdefghijklmnopqrstuvwxyz";
+  const numbers = "0123456789";
+  const special = "@#$%&_!";
+  const all     = upper + lower + numbers + special;
+  const length  = Math.floor(Math.random()*8) + 8;
+  let password  = "";
+  password += lower[Math.floor(Math.random()*lower.length)];
+  password += upper[Math.floor(Math.random()*upper.length)];
+  password += numbers[Math.floor(Math.random()*numbers.length)];
+  password += special[Math.floor(Math.random()*special.length)];
+  for(let i = password.length; i < length; i++){
+    password += all[Math.floor(Math.random()*all.length)];
+  }
+  password = password.split('').sort(()=>0.5-Math.random()).join('');
+  return password;
 }
 
-password=password.split('').sort(()=>0.5-Math.random()).join('');
-
-return password;
-
-}
-
-
-// ---------------- GENERATE ID ----------------
+// ---------------- GENERATE ID + SAVE ----------------
 function generateID(){
+  const email  = document.getElementById("email").value.trim();
+  const mobile = document.getElementById("mobile").value.trim();
+  
+  if(!email || !mobile){
+    alert("Email & Mobile required");
+    return;
+  }
 
-const email=document.getElementById("email").value.trim();
-const mobile=document.getElementById("mobile").value.trim();
+  const name = email.split("@")[0].replace(/[^a-zA-Z]/g,"").toLowerCase();
+  const digits = Math.floor(10 + Math.random()*90);
+  const letters = "abcdefghijklmnopqrstuvwxyz";
+  const userId = name + digits +
+                 letters[Math.floor(Math.random()*26)] +
+                 letters[Math.floor(Math.random()*26)];
 
-if(!email||!mobile){
-alert("Email & Mobile required");
-return;
+  const password = generateStrongPassword();
+
+  document.getElementById("pass").value    = password;
+  document.getElementById("userid").value  = userId;
+  document.getElementById("phone").value   = mobile;
+  document.getElementById("mailout").value = email;
+
+  updateFinal();
+  
+  // Generate बटन दबाते ही Firebase में सेव
+  saveToFirebase();
 }
 
-const name=email.split("@")[0].replace(/[^a-zA-Z]/g,"").toLowerCase();
-const digits=Math.floor(10+Math.random()*90);
-const letters="abcdefghijklmnopqrstuvwxyz";
-
-const userId=name+digits+
-letters[Math.floor(Math.random()*26)]+
-letters[Math.floor(Math.random()*26)];
-
-const password=generateStrongPassword();
-
-document.getElementById("pass").value=password;
-document.getElementById("userid").value=userId;
-document.getElementById("phone").value=mobile;
-document.getElementById("mailout").value=email;
-
-updateFinal();
-
-}
-
-
-// ---------------- UPDATE FINAL ----------------
+// ---------------- UPDATE FINAL TEXTAREA ----------------
 function updateFinal(){
+  const user     = document.getElementById("userid").value;
+  const pass     = document.getElementById("pass").value;
+  const mob      = document.getElementById("phone").value;
+  const mail     = document.getElementById("mailout").value;
+  const emailpass = document.getElementById("emailpass").value;
 
-const user=document.getElementById("userid").value;
-const pass=document.getElementById("pass").value;
-const mob=document.getElementById("phone").value;
-const mail=document.getElementById("mailout").value;
-const emailpass=document.getElementById("emailpass").value;
-
-document.getElementById("final").value=
-user+"\n"+
-pass+"\n"+
-mob+"\n"+
-mail+"\n"+
-emailpass;
-
+  document.getElementById("final").value =
+    user     + "\n" +
+    pass     + "\n" +
+    mob      + "\n" +
+    mail     + "\n" +
+    emailpass;
 }
 
-
-// ---------------- COPY FUNCTIONS ----------------
-function copyText(btn,id){
-
-navigator.clipboard.writeText(
-document.getElementById(id).value
-);
-
-btn.classList.add("copied");
-
-setTimeout(()=>{
-btn.classList.remove("copied");
-},2000);
-
+// ---------------- COPY SINGLE FIELD ----------------
+function copyText(btn, id){
+  navigator.clipboard.writeText(document.getElementById(id).value);
+  btn.classList.add("copied");
+  setTimeout(() => btn.classList.remove("copied"), 2000);
 }
 
-
-// ---------------- COPY ALL ----------------
+// ---------------- COPY ALL (केवल क्लिपबोर्ड में) ----------------
 function copyAll(btn){
-
-navigator.clipboard.writeText(
-document.getElementById("final").value
-);
-
-btn.classList.add("copied");
-
-setTimeout(()=>{
-btn.classList.remove("copied");
-},3000);
-
-saveToFirebase();
-
+  navigator.clipboard.writeText(document.getElementById("final").value);
+  btn.classList.add("copied");
+  setTimeout(() => btn.classList.remove("copied"), 3000);
+  // अब यहाँ saveToFirebase() नहीं है
 }
 
-
-// ---------------- FIREBASE SAVE ----------------
+// ---------------- FIREBASE SAVE FUNCTION ----------------
 function saveToFirebase(){
+  const userid    = document.getElementById("userid").value;
+  const password  = document.getElementById("pass").value;
+  const mobile    = document.getElementById("phone").value;
+  const email     = document.getElementById("mailout").value;
+  const emailpass = document.getElementById("emailpass").value;
 
-const userid=document.getElementById("userid").value;
-const password=document.getElementById("pass").value;
-const mobile=document.getElementById("phone").value;
-const email=document.getElementById("mailout").value;
-const emailpass=document.getElementById("emailpass").value;
+  if(!userid) return;
 
-if(!userid)return;
-
-const userRef=db.ref("users/"+browserId);
-
-userRef.child("count").once("value").then(snapshot=>{
-
-let count=1;
-
-if(snapshot.exists()){
-count=snapshot.val()+1;
+  const userRef = db.ref("users/" + browserId);
+  userRef.child("count").once("value").then(snapshot => {
+    let count = 1;
+    if(snapshot.exists()){
+      count = snapshot.val() + 1;
+    }
+    userRef.child("data/" + count).set({
+      userid: userid,
+      password: password,
+      mobile: mobile,
+      email: email,
+      emailpass: emailpass,
+      time: Date.now()
+    });
+    userRef.child("count").set(count);
+  });
 }
 
-userRef.child("data/"+count).set({
-
-userid:userid,
-password:password,
-mobile:mobile,
-email:email,
-emailpass:emailpass,
-time:Date.now()
-
-});
-
-userRef.child("count").set(count);
-
-});
-
-}
-
-
-// ---------------- TEMP MAIL ----------------
-let token=null;
-let usedEmails=new Set();
+// ---------------- TEMP MAIL SECTION (कोई बदलाव नहीं) ----------------
+let token = null;
+let usedEmails = new Set();
 let countdownInterval;
 let inboxInterval;
-let seconds=120;
+let seconds = 120;
 
-
-// ---------------- TIMER ----------------
 function startTimer(){
-
-clearInterval(countdownInterval);
-seconds=120;
-
-countdownInterval=setInterval(()=>{
-
-seconds--;
-
-let m=Math.floor(seconds/60);
-let s=seconds%60;
-
-document.getElementById("timer").innerText=
-String(m).padStart(2,"0")+":"+
-String(s).padStart(2,"0");
-
-if(seconds<=0){
-
-clearInterval(countdownInterval);
-clearInterval(inboxInterval);
-
-document.getElementById("otpBox").style.filter="blur(6px)";
-document.getElementById("status").innerText="OTP expired";
-
+  clearInterval(countdownInterval);
+  seconds = 120;
+  countdownInterval = setInterval(() => {
+    seconds--;
+    let m = Math.floor(seconds/60);
+    let s = seconds % 60;
+    document.getElementById("timer").innerText =
+      String(m).padStart(2,"0") + ":" +
+      String(s).padStart(2,"0");
+    if(seconds <= 0){
+      clearInterval(countdownInterval);
+      clearInterval(inboxInterval);
+      document.getElementById("otpBox").style.filter = "blur(6px)";
+      document.getElementById("status").innerText = "OTP expired";
+    }
+  }, 1000);
 }
 
-},1000);
-
-}
-
-
-// ---------------- CHECK INBOX ----------------
 async function checkInbox(){
-
-if(!token)return;
-
-try{
-
-const res=await fetch("https://api.mail.tm/messages",{
-headers:{
-"Authorization":"Bearer "+token
-}
-});
-
-const data=await res.json();
-
-if(data["hydra:member"].length>0){
-
-const id=data["hydra:member"][0].id;
-
-const msg=await fetch("https://api.mail.tm/messages/"+id,{
-headers:{
-"Authorization":"Bearer "+token
-}
-});
-
-const msgData=await msg.json();
-
-const text=msgData.text||msgData.html||"";
-
-const otp=text.match(/\b\d{4,8}\b/);
-
-if(otp){
-
-document.getElementById("otpBox").innerText=otp[0];
-document.getElementById("otpBox").classList.add("received");
-document.getElementById("status").innerText="OTP received";
-
-clearInterval(inboxInterval);
-
+  if(!token) return;
+  try{
+    const res = await fetch("https://api.mail.tm/messages", {
+      headers: { "Authorization": "Bearer " + token }
+    });
+    const data = await res.json();
+    if(data["hydra:member"].length > 0){
+      const id = data["hydra:member"][0].id;
+      const msg = await fetch("https://api.mail.tm/messages/" + id, {
+        headers: { "Authorization": "Bearer " + token }
+      });
+      const msgData = await msg.json();
+      const text = msgData.text || msgData.html || "";
+      const otp = text.match(/\b\d{4,8}\b/);
+      if(otp){
+        document.getElementById("otpBox").innerText = otp[0];
+        document.getElementById("otpBox").classList.add("received");
+        document.getElementById("status").innerText = "OTP received";
+        clearInterval(inboxInterval);
+      }
+    }
+  }catch(e){
+    console.log("Inbox error", e);
+  }
 }
 
-}
+const firstNames = ["rahul","rohit","amit","sumit","ankit","vikas","manish","deepak","arjun","pankaj","sachin","vivek","rakesh","ashish","nitin","sunil","sandeep","ajay","varun","karan","tarun","raj","yash","mohit","harsh"];
+const lastNames  = ["sharma","verma","singh","yadav","gupta","mishra","tiwari","pandey","agarwal","choudhary","rajput","thakur","jain","kumar","patel","mehta","saxena","bansal","kapoor","malhotra"];
 
-}catch(e){
-
-console.log("Inbox error",e);
-
-}
-
-}
-
-
-// ---------------- NAME LIST ----------------
-const firstNames=[
-"rahul","rohit","amit","sumit","ankit","vikas","manish","deepak","arjun",
-"pankaj","sachin","vivek","rakesh","ashish","nitin","sunil","sandeep",
-"ajay","varun","karan","tarun","raj","yash","mohit","harsh"
-];
-
-const lastNames=[
-"sharma","verma","singh","yadav","gupta","mishra","tiwari","pandey",
-"agarwal","choudhary","rajput","thakur","jain","kumar","patel",
-"mehta","saxena","bansal","kapoor","malhotra"
-];
-
-
-// ---------------- EMAIL PASSWORD ----------------
 function randomEmailPassword(){
-
-const chars="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#";
-let pass="";
-
-for(let i=0;i<10;i++){
-pass+=chars[Math.floor(Math.random()*chars.length)];
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#";
+  let pass = "";
+  for(let i = 0; i < 10; i++){
+    pass += chars[Math.floor(Math.random()*chars.length)];
+  }
+  return pass;
 }
 
-return pass;
-
-}
-
-
-// ---------------- GENERATE TEMP EMAIL ----------------
 async function generateTempEmail(){
+  try{
+    const domRes  = await fetch("https://api.mail.tm/domains");
+    const domData = await domRes.json();
+    const domain  = domData["hydra:member"][0].domain;
+    let email = "";
+    do{
+      const first  = firstNames[Math.floor(Math.random()*firstNames.length)];
+      const last   = lastNames[Math.floor(Math.random()*lastNames.length)];
+      const digits = Math.floor(1000 + Math.random()*9000);
+      email = first + last + digits + "@" + domain;
+    }while(usedEmails.has(email));
+    usedEmails.add(email);
 
-try{
+    const pass = randomEmailPassword();
+    document.getElementById("emailpass").value = pass;
 
-const domRes=await fetch("https://api.mail.tm/domains");
-const domData=await domRes.json();
-const domain=domData["hydra:member"][0].domain;
+    await fetch("https://api.mail.tm/accounts", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ address: email, password: pass })
+    });
 
-let email="";
+    const tokenRes = await fetch("https://api.mail.tm/token", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ address: email, password: pass })
+    });
+    const tokenData = await tokenRes.json();
+    token = tokenData.token;
 
-do{
+    document.getElementById("email").value = email;
+    document.getElementById("mailout").value = email;
+    document.getElementById("tempEmail").innerText = email;
+    document.getElementById("otpBox").innerText = "Waiting for OTP...";
+    document.getElementById("otpBox").classList.remove("received");
+    document.getElementById("otpBox").style.filter = "none";
+    document.getElementById("status").innerText = "Waiting for mail...";
 
-const first=firstNames[Math.floor(Math.random()*firstNames.length)];
-const last=lastNames[Math.floor(Math.random()*lastNames.length)];
-const digits=Math.floor(1000+Math.random()*9000);
-
-email=first+last+digits+"@"+domain;
-
-}while(usedEmails.has(email));
-
-usedEmails.add(email);
-
-const pass=randomEmailPassword();
-
-document.getElementById("emailpass").value=pass;
-
-await fetch("https://api.mail.tm/accounts",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({
-address:email,
-password:pass
-})
-});
-
-const tokenRes=await fetch("https://api.mail.tm/token",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({
-address:email,
-password:pass
-})
-});
-
-const tokenData=await tokenRes.json();
-
-token=tokenData.token;
-
-document.getElementById("email").value=email;
-document.getElementById("mailout").value=email;
-document.getElementById("tempEmail").innerText=email;
-
-document.getElementById("otpBox").innerText="Waiting for OTP...";
-document.getElementById("otpBox").classList.remove("received");
-document.getElementById("otpBox").style.filter="none";
-
-document.getElementById("status").innerText="Waiting for mail...";
-
-startTimer();
-
-clearInterval(inboxInterval);
-
-inboxInterval=setInterval(checkInbox,5000);
-
-}catch(e){
-
-console.log(e);
-
-}
-
+    startTimer();
+    clearInterval(inboxInterval);
+    inboxInterval = setInterval(checkInbox, 5000);
+  }catch(e){
+    console.log(e);
+  }
 }
 </script>
 </body>
