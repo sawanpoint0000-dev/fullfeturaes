@@ -3,95 +3,231 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ID Generator + Temp Mail</title>
+<title>ID Generator + Temp Mail + Address Generator</title>
+
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
 <style>
-body{background:#eef2f5;font-family:Arial,sans-serif;display:flex;justify-content:center;padding:20px;margin:0;}
-.container{background:#fff;width:100%;max-width:460px;padding:24px;border-radius:10px;box-shadow:0 0 12px rgba(0,0,0,.15);}
-h2,h3{text-align:center;margin-bottom:16px;}
-input,textarea,button{width:100%;padding:10px;margin-top:10px;font-size:14px;border:1px solid #ccc;border-radius:6px;}
-.row{display:flex;gap:6px;align-items:center;}
-button{background:#007bff;color:#fff;border:none;cursor:pointer;}
-button:hover{background:#0056b3;}
-button.copied{background:#28a745!important;}
-textarea{height:110px;resize:none;}
-input[readonly]{background:#f5f5f5;}
-#tempMailSection{margin-top:30px;padding-top:20px;border-top:1px solid #ddd;}
-#tempEmail{font-size:15px;padding:12px;background:#f8f9fa;cursor:pointer;word-break:break-all;text-align:center;}
-#otpBox{font-size:28px;font-weight:bold;letter-spacing:6px;text-align:center;padding:16px;background:#f8f9fa;border:2px dashed #007bff;border-radius:8px;min-height:60px;margin:12px 0;}
-#otpBox.received{border-color:#28a745;background:#e8f5e9;color:#155724;}
-#timer{text-align:center;font-size:24px;font-weight:bold;color:#dc3545;margin:8px 0;}
-#status{text-align:center;font-size:13px;margin-top:8px;}
+    body {
+        background:#eef2f5;
+        font-family:Arial,sans-serif;
+        margin:0;
+        padding:20px;
+        min-height:100vh;
+    }
+    .container {
+        background:#fff;
+        width:100%;
+        max-width:460px;
+        margin:0 auto 40px auto;
+        padding:24px;
+        border-radius:10px;
+        box-shadow:0 0 12px rgba(0,0,0,.15);
+    }
+    h2, h3 { text-align:center; margin-bottom:16px; }
+    input, textarea, button {
+        width:100%;
+        padding:10px;
+        margin-top:10px;
+        font-size:14px;
+        border:1px solid #ccc;
+        border-radius:6px;
+        box-sizing:border-box;
+    }
+    .row { display:flex; gap:6px; align-items:center; }
+    button {
+        background:#007bff;
+        color:#fff;
+        border:none;
+        cursor:pointer;
+    }
+    button:hover { background:#0056b3; }
+    button.copied { background:#28a745 !important; }
+    textarea { height:110px; resize:none; }
+    input[readonly] { background:#f5f5f5; }
+    #tempMailSection {
+        margin-top:30px;
+        padding-top:20px;
+        border-top:1px solid #ddd;
+    }
+    #tempEmail {
+        font-size:15px;
+        padding:12px;
+        background:#f8f9fa;
+        cursor:pointer;
+        word-break:break-all;
+        text-align:center;
+    }
+    #otpBox {
+        font-size:28px;
+        font-weight:bold;
+        letter-spacing:6px;
+        text-align:center;
+        padding:16px;
+        background:#f8f9fa;
+        border:2px dashed #007bff;
+        border-radius:8px;
+        min-height:60px;
+        margin:12px 0;
+    }
+    #otpBox.received {
+        border-color:#28a745;
+        background:#e8f5e9;
+        color:#155724;
+    }
+    #timer {
+        text-align:center;
+        font-size:24px;
+        font-weight:bold;
+        color:#dc3545;
+        margin:8px 0;
+    }
+    #status { text-align:center; font-size:13px; margin-top:8px; }
+
+    /* ------------------ Address Generator Style ------------------ */
+    .address-section {
+        background: #0d0d0d;
+        color: lime;
+        padding: 30px 20px;
+        border-radius: 12px;
+        max-width: 460px;
+        margin: 0 auto;
+        box-shadow: 0 0 20px rgba(0,255,0,0.2);
+    }
+    .address-section h2 {
+        color: #00ff00;
+        margin-top: 0;
+    }
+    .address-box {
+        background: #1a1a1a;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 12px rgba(0,255,0,0.3);
+    }
+    .address-line {
+        padding: 14px;
+        margin: 12px 0;
+        background: #222;
+        border-radius: 6px;
+        font-family: 'Courier New', monospace;
+    }
+    .address-btn {
+        padding: 14px;
+        margin-top: 20px;
+        background: #00ff00;
+        color: black;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        width: 100%;
+        font-weight: bold;
+        font-size: 16px;
+    }
+    .address-btn:hover { background: #00cc00; }
+    #address-msg {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #1a1a1a;
+        color: lime;
+        padding: 12px 24px;
+        border-radius: 8px;
+        box-shadow: 0 0 15px lime;
+        display: none;
+        z-index: 1000;
+    }
 </style>
 </head>
 <body>
+
+<div id="address-msg"></div>
+
+<!-- ====================== ID + Temp Mail Section ====================== -->
 <div class="container">
-<h2>ID Generator</h2>
-<input type="email" id="email" placeholder="Enter Email" readonly>
-<input type="text" id="mobile" placeholder="Enter Mobile Number">
-<button onclick="generateID()">Generate</button>
-<div class="row">
-<input id="pass" readonly placeholder="Password">
-<button onclick="copyText(this,'pass')">Copy</button>
+    <h2>ID Generator</h2>
+    <input type="email" id="email" placeholder="Enter Email" readonly>
+    <input type="text" id="mobile" placeholder="Enter Mobile Number">
+    <button onclick="generateID()">Generate</button>
+
+    <div class="row">
+        <input id="pass" readonly placeholder="Password">
+        <button onclick="copyText(this,'pass')">Copy</button>
+    </div>
+    <div class="row">
+        <input id="userid" readonly placeholder="User ID">
+        <button onclick="copyText(this,'userid')">Copy</button>
+    </div>
+    <div class="row">
+        <input id="phone" readonly placeholder="Mobile">
+        <button onclick="copyText(this,'phone')">Copy</button>
+    </div>
+    <div class="row">
+        <input id="mailout" readonly placeholder="Email">
+        <button onclick="copyText(this,'mailout')">Copy</button>
+    </div>
+    <div class="row">
+        <input id="emailpass" readonly placeholder="Email Password">
+        <button onclick="copyText(this,'emailpass')">Copy</button>
+    </div>
+
+    <button onclick="copyAll(this)">ALL COPY</button>
+    <textarea id="final" readonly placeholder="Final Output"></textarea>
+
+    <div id="tempMailSection">
+        <h3>Temp Mail + OTP (2 min)</h3>
+        <button onclick="generateTempEmail()" style="background:#17a2b8;">Generate Temp Email</button>
+        <div id="tempEmail">Click button to generate temp email</div>
+        <div id="timer">02:00</div>
+        <div id="otpBox">Waiting for OTP...</div>
+        <div id="status"></div>
+    </div>
 </div>
-<div class="row">
-<input id="userid" readonly placeholder="User ID">
-<button onclick="copyText(this,'userid')">Copy</button>
-</div>
-<div class="row">
-<input id="phone" readonly placeholder="Mobile">
-<button onclick="copyText(this,'phone')">Copy</button>
-</div>
-<div class="row">
-<input id="mailout" readonly placeholder="Email">
-<button onclick="copyText(this,'mailout')">Copy</button>
-</div>
-<div class="row">
-<input id="emailpass" readonly placeholder="Email Password">
-<button onclick="copyText(this,'emailpass')">Copy</button>
-</div>
-<button onclick="copyAll(this)">ALL COPY</button>
-<textarea id="final" readonly placeholder="Final Output"></textarea>
-<div id="tempMailSection">
-<h3>Temp Mail + OTP (2 min)</h3>
-<button onclick="generateTempEmail()" style="background:#17a2b8;">Generate Temp Email</button>
-<div id="tempEmail">Click button to generate temp email</div>
-<div id="timer">02:00</div>
-<div id="otpBox">Waiting for OTP...</div>
-<div id="status"></div>
-</div>
+
+<!-- ====================== Address Generator Section ====================== -->
+<div class="address-section">
+    <h2>🔥 Address Generator</h2>
+    <div class="address-box">
+        <div class="address-line">
+            📍 <span id="address">Loading...</span>
+        </div>
+        <div class="address-line">
+            📮 PIN: <span id="pincode">------</span>
+        </div>
+        <button class="address-btn" onclick="copyAndNew()">Copy & Generate New</button>
+    </div>
 </div>
 
 <script>
-// ---------------- FIREBASE ----------------
+// ====================== Firebase Config ======================
 firebase.initializeApp({
-  apiKey:"AIzaSyDmnmOd6fPmLMTCb5DUdWDSTRQ81Ffl72w",
-  authDomain:"sdaffa-b3b89.firebaseapp.com",
-  databaseURL:"https://sdaffa-b3b89-default-rtdb.firebaseio.com",
-  projectId:"sdaffa-b3b89",
-  storageBucket:"sdaffa-b3b89.firebasestorage.app",
-  messagingSenderId:"251487165929",
-  appId:"1:251487165929:web:c91430227781f58d91ff78"
+  apiKey: "AIzaSyDmnmOd6fPmLMTCb5DUdWDSTRQ81Ffl72w",
+  authDomain: "sdaffa-b3b89.firebaseapp.com",
+  databaseURL: "https://sdaffa-b3b89-default-rtdb.firebaseio.com",
+  projectId: "sdaffa-b3b89",
+  storageBucket: "sdaffa-b3b89.firebasestorage.app",
+  messagingSenderId: "251487165929",
+  appId: "1:251487165929:web:c91430227781f58d91ff78"
 });
 const db = firebase.database();
 
-// ---------------- BROWSER UNIQUE ID ----------------
+// Browser Unique ID
 let browserId = localStorage.getItem("browserId");
 if(!browserId){
   browserId = "browser_" + Math.random().toString(36).slice(2,10);
   localStorage.setItem("browserId", browserId);
 }
 
-// ---------------- STRONG PASSWORD ----------------
+// ====================== ID Generator Functions ======================
 function generateStrongPassword(){
-  const upper   = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  const lower   = "abcdefghijklmnopqrstuvwxyz";
+  const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const lower = "abcdefghijklmnopqrstuvwxyz";
   const numbers = "0123456789";
   const special = "@#$%&_!";
-  const all     = upper + lower + numbers + special;
-  const length  = Math.floor(Math.random()*8) + 8;
-  let password  = "";
+  const all = upper + lower + numbers + special;
+  const length = Math.floor(Math.random()*8) + 8;
+  let password = "";
   password += lower[Math.floor(Math.random()*lower.length)];
   password += upper[Math.floor(Math.random()*upper.length)];
   password += numbers[Math.floor(Math.random()*numbers.length)];
@@ -99,100 +235,75 @@ function generateStrongPassword(){
   for(let i = password.length; i < length; i++){
     password += all[Math.floor(Math.random()*all.length)];
   }
-  password = password.split('').sort(()=>0.5-Math.random()).join('');
-  return password;
+  return password.split('').sort(()=>0.5-Math.random()).join('');
 }
 
-// ---------------- GENERATE ID + SAVE ----------------
 function generateID(){
-  const email  = document.getElementById("email").value.trim();
+  const email = document.getElementById("email").value.trim();
   const mobile = document.getElementById("mobile").value.trim();
-  
+ 
   if(!email || !mobile){
     alert("Email & Mobile required");
     return;
   }
-
   const name = email.split("@")[0].replace(/[^a-zA-Z]/g,"").toLowerCase();
   const digits = Math.floor(10 + Math.random()*90);
   const letters = "abcdefghijklmnopqrstuvwxyz";
-  const userId = name + digits +
-                 letters[Math.floor(Math.random()*26)] +
-                 letters[Math.floor(Math.random()*26)];
-
+  const userId = name + digits + letters[Math.floor(Math.random()*26)] + letters[Math.floor(Math.random()*26)];
   const password = generateStrongPassword();
 
   document.getElementById("pass").value    = password;
   document.getElementById("userid").value  = userId;
   document.getElementById("phone").value   = mobile;
   document.getElementById("mailout").value = email;
-
   updateFinal();
-  
-  // Generate बटन दबाते ही Firebase में सेव
+
   saveToFirebase();
 }
 
-// ---------------- UPDATE FINAL TEXTAREA ----------------
 function updateFinal(){
-  const user     = document.getElementById("userid").value;
-  const pass     = document.getElementById("pass").value;
-  const mob      = document.getElementById("phone").value;
-  const mail     = document.getElementById("mailout").value;
+  const user = document.getElementById("userid").value;
+  const pass = document.getElementById("pass").value;
+  const mob  = document.getElementById("phone").value;
+  const mail = document.getElementById("mailout").value;
   const emailpass = document.getElementById("emailpass").value;
 
-  document.getElementById("final").value =
-    user     + "\n" +
-    pass     + "\n" +
-    mob      + "\n" +
-    mail     + "\n" +
-    emailpass;
+  document.getElementById("final").value = 
+    user + "\n" + pass + "\n" + mob + "\n" + mail + "\n" + emailpass;
 }
 
-// ---------------- COPY SINGLE FIELD ----------------
 function copyText(btn, id){
   navigator.clipboard.writeText(document.getElementById(id).value);
   btn.classList.add("copied");
   setTimeout(() => btn.classList.remove("copied"), 2000);
 }
 
-// ---------------- COPY ALL (केवल क्लिपबोर्ड में) ----------------
 function copyAll(btn){
   navigator.clipboard.writeText(document.getElementById("final").value);
   btn.classList.add("copied");
   setTimeout(() => btn.classList.remove("copied"), 3000);
-  // अब यहाँ saveToFirebase() नहीं है
 }
 
-// ---------------- FIREBASE SAVE FUNCTION ----------------
 function saveToFirebase(){
-  const userid    = document.getElementById("userid").value;
-  const password  = document.getElementById("pass").value;
-  const mobile    = document.getElementById("phone").value;
-  const email     = document.getElementById("mailout").value;
-  const emailpass = document.getElementById("emailpass").value;
-
+  const userid   = document.getElementById("userid").value;
+  const password = document.getElementById("pass").value;
+  const mobile   = document.getElementById("phone").value;
+  const email    = document.getElementById("mailout").value;
+  const emailpass= document.getElementById("emailpass").value;
   if(!userid) return;
 
   const userRef = db.ref("users/" + browserId);
   userRef.child("count").once("value").then(snapshot => {
-    let count = 1;
-    if(snapshot.exists()){
-      count = snapshot.val() + 1;
-    }
+    let count = snapshot.exists() ? snapshot.val() + 1 : 1;
     userRef.child("data/" + count).set({
-      userid: userid,
-      password: password,
-      mobile: mobile,
-      email: email,
-      emailpass: emailpass,
+      userid, password, mobile, email, emailpass,
       time: Date.now()
     });
     userRef.child("count").set(count);
   });
 }
 
-// ---------------- TEMP MAIL SECTION (कोई बदलाव नहीं) ----------------
+// ====================== Temp Mail Functions ======================
 let token = null;
 let usedEmails = new Set();
 let countdownInterval;
@@ -206,9 +317,8 @@ function startTimer(){
     seconds--;
     let m = Math.floor(seconds/60);
     let s = seconds % 60;
-    document.getElementById("timer").innerText =
-      String(m).padStart(2,"0") + ":" +
-      String(s).padStart(2,"0");
+    document.getElementById("timer").innerText = 
+      String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0");
     if(seconds <= 0){
       clearInterval(countdownInterval);
       clearInterval(inboxInterval);
@@ -225,7 +335,7 @@ async function checkInbox(){
       headers: { "Authorization": "Bearer " + token }
     });
     const data = await res.json();
-    if(data["hydra:member"].length > 0){
+    if(data["hydra:member"]?.length > 0){
       const id = data["hydra:member"][0].id;
       const msg = await fetch("https://api.mail.tm/messages/" + id, {
         headers: { "Authorization": "Bearer " + token }
@@ -240,9 +350,7 @@ async function checkInbox(){
         clearInterval(inboxInterval);
       }
     }
-  }catch(e){
-    console.log("Inbox error", e);
-  }
+  }catch(e){}
 }
 
 const firstNames = ["rahul","rohit","amit","sumit","ankit","vikas","manish","deepak","arjun","pankaj","sachin","vivek","rakesh","ashish","nitin","sunil","sandeep","ajay","varun","karan","tarun","raj","yash","mohit","harsh"];
@@ -259,18 +367,18 @@ function randomEmailPassword(){
 
 async function generateTempEmail(){
   try{
-    const domRes  = await fetch("https://api.mail.tm/domains");
+    const domRes = await fetch("https://api.mail.tm/domains");
     const domData = await domRes.json();
-    const domain  = domData["hydra:member"][0].domain;
+    const domain = domData["hydra:member"][0].domain;
     let email = "";
     do{
-      const first  = firstNames[Math.floor(Math.random()*firstNames.length)];
-      const last   = lastNames[Math.floor(Math.random()*lastNames.length)];
+      const first = firstNames[Math.floor(Math.random()*firstNames.length)];
+      const last  = lastNames[Math.floor(Math.random()*lastNames.length)];
       const digits = Math.floor(1000 + Math.random()*9000);
       email = first + last + digits + "@" + domain;
     }while(usedEmails.has(email));
+    
     usedEmails.add(email);
-
     const pass = randomEmailPassword();
     document.getElementById("emailpass").value = pass;
 
@@ -303,6 +411,81 @@ async function generateTempEmail(){
     console.log(e);
   }
 }
+
+// ====================== Address Generator ======================
+const locations = [
+    {city:"Patna", state:"Bihar", pincode:"800001"},
+    {city:"Gaya", state:"Bihar", pincode:"823001"},
+    {city:"Delhi", state:"Delhi", pincode:"110001"},
+    {city:"Mumbai", state:"Maharashtra", pincode:"400001"},
+    {city:"Kolkata", state:"West Bengal", pincode:"700001"},
+    {city:"Chennai", state:"Tamil Nadu", pincode:"600001"},
+    {city:"Bangalore", state:"Karnataka", pincode:"560001"},
+    {city:"Tawang", state:"Arunachal Pradesh", pincode:"790104"}
+];
+
+const streets = ["MG Road","Station Road","Main Road","Ring Road","Civil Lines"];
+
+function generateAddress(){
+    const loc = locations[Math.floor(Math.random()*locations.length)];
+    const house = Math.floor(Math.random()*500)+1;
+    const street = streets[Math.floor(Math.random()*streets.length)];
+    return {
+        address: `${house}, ${street}, ${loc.city}, ${loc.state}`,
+        pincode: loc.pincode
+    };
+}
+
+function loadAddressData(){
+    let d = sessionStorage.getItem("addr");
+    if(d) return JSON.parse(d);
+    let n = generateAddress();
+    sessionStorage.setItem("addr", JSON.stringify(n));
+    return n;
+}
+
+function updateAddressUI(data){
+    document.getElementById("address").innerText = data.address;
+    document.getElementById("pincode").innerText = data.pincode;
+}
+
+function copyAndNew(){
+    const data = loadAddressData();
+    const text = `${data.address}, ${data.pincode}`;
+    
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text)
+            .then(afterAddressCopy)
+            .catch(() => fallbackAddressCopy(text));
+    } else {
+        fallbackAddressCopy(text);
+    }
+}
+
+function fallbackAddressCopy(text){
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textarea);
+    afterAddressCopy();
+}
+
+function afterAddressCopy(){
+    const newData = generateAddress();
+    sessionStorage.setItem("addr", JSON.stringify(newData));
+    updateAddressUI(newData);
+    
+    const msg = document.getElementById("address-msg");
+    msg.innerText = "Copied & New Address Generated!";
+    msg.style.display = "block";
+    setTimeout(()=>msg.style.display="none", 2200);
+}
+
+window.onload = () => {
+    updateAddressUI(loadAddressData());
+};
 </script>
 </body>
 </html>
